@@ -2,6 +2,7 @@ import React from 'react';
 import { AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
+import Link from '@material-ui/core/Link';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,6 +35,8 @@ const useStyles = makeStyles((theme) => ({
 export default function SearchAppBar() {
   const classes = useStyles();
 
+  const preventDefault = (event) => event.preventDefault();
+
   return (
     <div className={classes.root}>
       <AppBar position="static" color="primary">
@@ -44,7 +47,11 @@ export default function SearchAppBar() {
           <Typography variant="h6" className={classes.title}>
             ESPACE
           </Typography>
-           
+          <Typography>
+            <Link href="#" onClick={preventDefault}>
+              Link
+            </Link>
+          </Typography>
         </Toolbar>
       </AppBar>
     </div>

@@ -1,47 +1,80 @@
-const ROUTES = {
-    'ajmer': ['bhilwara', 'jaipur', 'nagaur', 'pali', 'rajsamand', 'tonk'],
-    'alwar': ['bharatpur', 'dausa', 'jaipur'],
-    'banswara': ['dungarpur', 'pratapgarh', 'udaipur'],
-    'baran': ['jhalawar', 'kota'],
-    'barmer': ['jaisalmer', 'jalore', 'jodhpur', 'pali'],
-    'bharatpur': ['alwar', 'dausa', 'dholpur', 'karauli'],
-    'bhilwara': ['ajmer', 'bundi', 'chittorgarh', 'rajsamand', 'tonk'],
-    'bikaner': ['churu', 'ganganagar', 'hanumangarh', 'jaisalmer', 'jodhpur', 'nagaur'],
-    'bundi': ['ajmer', 'bhilwara', 'chittorgarh', 'kota', 'tonk' ],
-    'chittorgarh': ['bhilwara', 'bundi', 'kota', 'rajsamand' ],
-    'churu': ['bikaner', 'ganganagar', 'hanumangarh', 'jhunjhunu', 'nagaur', 'sikar',],
-    'dausa': ['alwar', 'bharatpur', 'jaipur', 'karauli', 'sawai madhopur'],
-    'dholpur': ['bharatpur', 'karauli'],
-    'dungarpur': ['banswara', 'pratapgarh', 'udaipur'],
-    'ganganagar': ['bikaner', 'hanumangarh'],
-    'hanumangarh': ['bikaner', 'churu', 'ganganagar'],
-    'jaipur': ['ajmer', 'alwar', 'dausa', 'nagaur', 'sawai madhopur', 'sikar', 'tonk'],
-    'jaisalmer': ['barmer', 'bikaner', 'jodhpur'],
-    'jalore': ['barmer', 'jodhpur', 'pali', 'sirohi'],
-    'jhalawar': ['baran', 'kota'],
-    'jhunjhunu': ['churu', 'sikar'],
-    'jodhpur': ['barmer', 'bikaner', 'jaisalmer', 'jalore', 'nagaur', 'pali'],
-    'karauli': ['bharatpur', 'dausa', 'dholpur', 'sawai madhopur'],
-    'kota': ['baran', 'bundi', 'chittorgarh', 'jhalawar'],
-    'nagaur': ['ajmer', 'bikaner', 'churu', 'jaipur', 'jodhpur', 'pali', 'sikar'], 
-    'pali': ['ajmer', 'barmer', 'jalore', 'jodhpur', 'nagaur', 'rajsamand', 'sirohi', 'udaipur'],
-    'pratapgarh': ['banswara', 'chittorgarh', 'udaipur'],
-    'rajsamand': [ 'ajmer', 'bhilwara', 'chittorgarh', 'pali', 'udaipur' ],
-    'sawai madhopur': [ 'dausa', 'jaipur', 'karauli', 'kota', 'tonk' ],
-    'sikar': [ 'churu', 'jaipur', 'jhunjhunu', 'nagaur' ],
-    'sirohi': [ 'jalore', 'pali', 'udaipur' ],
-    'tonk': ['ajmer', 'bhilwara', 'bundi', 'dausa', 'jaipur', 'kota', 'sawai madhopur'],
-    'udaipur': [ 'banswara', 'chittorgarh', 'dungarpur', 'pali', 'pratapgarh', 'rajsamand', 'sirohi' ],
+import { locations, routes } from "./constants";
+
+const BFS = (adjList, src, dest, pred, dist) => {
+  const nodes = adjList.length 
+  let visited = new Array(nodes).fill(false);
+
+  visited[src] = true
+  dist[src] = 0
+
+  let queue = []
+  queue.push(src)
+
+  while (queue.length){
+    let node = queue[0]
+    queue.shift();
+
+    for (const vertex of adjList[node]){
+      if (!visited[vertex]){
+        visited[vertex] = true
+        dist[vertex] = dist[node] + 1
+        pred[vertex] = node
+        queue.push(vertex)
+
+        if (vertex === dest){
+          return true
+        }
+      }
+    }
+  }
+
+  return false
 }
 
-const SIGNAL_STRENGTH = ['poor', 'average', 'good', 'great', 'excellent']
+const getBestRoute = (source, destination) => {
+  const nodes = routes.length 
+  let predecessor = new Array(nodes).fill(-1);
+  let distance = new Array(nodes).fill(1000000);
 
-const SIGNAL_STRENGTH_BY_LOCATION = Object.keys(ROUTES).reduce((accumulator, key) => {
-    accumulator[key] = SIGNAL_STRENGTH[Math.floor(4 * Math.random())]
-    return accumulator
-}, {})
+  const graph = BFS(routes, source, destination, predecessor, distance)
 
-export default {
-    routes: ROUTES,
-    loc_signal_strength: SIGNAL_STRENGTH_BY_LOCATION
-};
+  if (!graph) {
+    return []
+  }
+
+  let path = []
+  let crawl = destination
+  path.push(crawl)
+
+  while (predecessor[crawl] !== -1){
+    path.push(predecessor[crawl])
+    crawl = predecessor[crawl]
+  }
+
+  return path
+}
+
+const getIndexByLocation = (place, start=0, end=32) => {
+  if (start <= end) { 
+    let mid = start + parseInt((end - start) / 2)
+
+    if (locations[mid] === place){
+      return mid
+    } else if (locations[mid] > place){
+      return getIndexByLocation(place, start, mid-1)
+    } else {
+      return getIndexByLocation(place, mid+1, end)
+    }
+  } 
+
+  return -1
+}
+
+const getShortestPath = (src, dest) => {
+  const srcIdx = getIndexByLocation(src);
+  const destIdx = getIndexByLocation(dest);
+  const path = getBestRoute(srcIdx, destIdx);
+  return path.reverse().map((val) => locations[val]);
+}
+
+export default getShortestPath;
